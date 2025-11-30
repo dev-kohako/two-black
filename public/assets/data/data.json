@@ -1,0 +1,282 @@
+{
+  "sobre": [
+    {
+      "id": 2,
+      "name": "Igor Fernandes",
+      "color": "#0937ac",
+      "image": "IMG_IgorDesigner_mobile.png",
+      "imagePc": "IMG_IgorDesign_PC.png",
+      "imageFolder": "igor_images",
+      "instagramUsername": "euigordesigner",
+      "instagramLink": "https://www.instagram.com/euigordesigner/"
+    },
+    {
+      "id": 3,
+      "name": "Vlaisson Ribeiro",
+      "color": "#0e0e0e",
+      "image": "IMG_VrDesigner_mobile.png",
+      "imagePc": "IMG_VrDesign_PC.png",
+      "imageFolder": "vlaisson_images",
+      "instagramUsername": "vrsdsing",
+      "instagramLink": "https://www.instagram.com/vrsdsing/"
+    }
+  ],
+  "projetos": [
+    {
+      "id": 1,
+      "name": "Bioextratus",
+      "image": "IMG_Bioextratus.png",
+      "type": "image",
+      "description": "Post dividido entre vermelho e azul, com destaque central para o produto Bio Extratus e informações promocionais da drogaria.",
+      "creatorId": [1, 3]
+    },
+    {
+      "id": 2,
+      "name": "Engov",
+      "image": "IMG_Engov.png",
+      "type": "image",
+      "description": "Layout elegante em vermelho e azul contendo produtos Engov, checklist superior e informações da Drogaria Ideal.",
+      "creatorId": [1, 3]
+    },
+    {
+      "id": 3,
+      "name": "Flavia Mesquita",
+      "image": "IMG_FlaviaMesquita.png",
+      "type": "image",
+      "description": "Arte com gradiente roxo e verde, foto central e texto destacando 'Doutora Flavia Mesquita', com instrução interativa.",
+      "creatorId": [1, 3]
+    },
+    {
+      "id": 4,
+      "name": "Ievec",
+      "image": "IMG_Ievec.png",
+      "type": "image",
+      "description": "Post festivo em tema de arraiá com fundo laranja amarelado, pessoas em destaque e informações sobre o Arraiá Ievec 2023.",
+      "creatorId": [1, 2]
+    },
+    {
+      "id": 5,
+      "name": "Sorteio Malado",
+      "image": "IMG_Sorteio-malado.png",
+      "type": "image",
+      "description": "Tema Halloween com papel rasgado, abóboras, garrafa e ingressos, destacando o texto 'Sorteio Insane'.",
+      "creatorId": [1, 3]
+    },
+    {
+      "id": 6,
+      "name": "Vaquejada",
+      "image": "IMG_vaquejada.png",
+      "type": "image",
+      "description": "Arte da vaquejada com céu azul, cantores em destaque, cactos e informações sobre o evento.",
+      "creatorId": [1, 3]
+    },
+    {
+      "id": 7,
+      "name": "Vaquejada - Vídeo",
+      "image": "VIDEO_vaquejada.mp4",
+      "type": "video",
+      "description": "Motion design com cantores, madeira rústica, títulos destacados e identidade visual forte do evento.",
+      "creatorId": [1, 3]
+    },
+    {
+      "id": 8,
+      "name": "Vegas Final",
+      "image": "VIDEO_vegas_final.mp4",
+      "type": "video",
+      "description": "Animação com temática neon celebrando a inauguração da boate Las Vegas, com elementos vibrantes e fundo granulado.",
+      "creatorId": [1, 3]
+    },
+    {
+      "id": 15,
+      "name": "Drogaria Ideal – Lembrete",
+      "image": "ideal_1.png",
+      "type": "image",
+      "description": "Arte vibrante com kits de medicamentos coloridos dispostos em perspectiva, com chamada 'Lembrete' da Drogaria Ideal.",
+      "creatorId": [3]
+    },
+    {
+      "id": 16,
+      "name": "Secret – Desodorante",
+      "image": "ideal_2.png",
+      "type": "image",
+      "description": "Post dividido em tons de azul e vermelho com foco na linha Secret. Produtos centralizados com tipografia forte e moderna.",
+      "creatorId": [3]
+    },
+    {
+      "id": 17,
+      "name": "Dr. Antônio",
+      "image": "dr_antonio.png",
+      "type": "image",
+      "description": "Foto profissional de médico com iluminação dramática, texto institucional em branco e fundo frio com clima hospitalar.",
+      "creatorId": [3]
+    },
+    {
+      "id": 18,
+      "name": "Linha de Cachos",
+      "image": "ideal_3.png",
+      "type": "image",
+      "description": "Produtos para cabelo cacheado da Ideal sobre fundo vibrante rosa e azul. Tipografia jovem e chamativa.",
+      "creatorId": [3]
+    },
+    {
+      "id": 19,
+      "name": "São José – Telego",
+      "image": "telego.png",
+      "type": "image",
+      "description": "Arte religiosa com imagem de São José em fundo dourado, foco em iluminação suave e estética clássica.",
+      "creatorId": [3]
+    },
+    {
+      "id": 20,
+      "name": "Ideal – Linha Bebê",
+      "image": "ideal_4.png",
+      "type": "image",
+      "description": "Composição acolhedora com produtos infantis, bebê sorrindo e elementos suaves em azul e rosa.",
+      "creatorId": [3]
+    },
+    {
+      "id": 21,
+      "name": "Dia das Mães – Ideal",
+      "image": "ideal_5.png",
+      "type": "image",
+      "description": "Arte comemorativa com mãe e filha abraçadas, fundo vermelho texturizado e moldura dourada.",
+      "creatorId": [3]
+    },
+    {
+      "id": 22,
+      "name": "Nutrição – RS Fitness",
+      "image": "rs_fitness_2.png",
+      "type": "image",
+      "description": "Foto profissional de nutricionista ao lado de legumes frescos, layout elegante em preto e dourado.",
+      "creatorId": [3]
+    },
+    {
+      "id": 24,
+      "name": "Enem 2024 – Inscrições",
+      "image": "enem_2024.png",
+      "type": "image",
+      "description": "Post estudantil com jovem sorrindo, grafismos modernos e informações do Enem 2024.",
+      "creatorId": [3]
+    },
+    {
+      "id": 25,
+      "name": "Ideal – São João",
+      "image": "ideal_6.png",
+      "type": "image",
+      "description": "Tema junino com lanternas, elementos de madeira e produtos masculinos destacados.",
+      "creatorId": [3]
+    },
+    {
+      "id": 26,
+      "name": "Dia dos Namorados – RS Fitness",
+      "image": "rs_fitness.png",
+      "type": "image",
+      "description": "Casal treinando junto em estética P&B com toque dourado, promovendo campanha especial.",
+      "creatorId": [3]
+    },
+    {
+      "id": 27,
+      "name": "Corpus Christi – LG Odonto",
+      "image": "lg_odonto.png",
+      "type": "image",
+      "description": "Arte religiosa sofisticada com ostensório dourado centralizado, tons claros e tipografia elegante.",
+      "creatorId": [3]
+    },
+    {
+      "id": 28,
+      "name": "Donnas – Dia das Mães",
+      "image": "donnas.png",
+      "type": "image",
+      "description": "Fotografia emocional de mãe e filha abraçadas, com texturas em bege e tipografia clássica.",
+      "creatorId": [3]
+    },
+    {
+      "id": 29,
+      "name": "Advogada – Cálculo de Aposentadoria",
+      "image": "advogada.png",
+      "type": "image",
+      "description": "Arte profissional com advogada e texto explicativo sobre cálculo de aposentadoria, tons neutros e tipografia elegante.",
+      "creatorId": [2]
+    },
+    {
+      "id": 30,
+      "name": "Advogada – Não Fechar Contratos",
+      "image": "advogada_2.png",
+      "type": "image",
+      "description": "Foto empresarial com fundo escuro e texto sobre captação de clientes. Estilo moderno e corporativo.",
+      "creatorId": [2]
+    },
+    {
+      "id": 31,
+      "name": "Advogada – Aplicativos",
+      "image": "advogada_3.png",
+      "type": "image",
+      "description": "Foto da advogada com layout elegante em preto, texto falando sobre apps que auxiliam no trabalho jurídico.",
+      "creatorId": [2]
+    },
+    {
+      "id": 32,
+      "name": "Advogada – Conteúdo Útil",
+      "image": "advogada_4.png",
+      "type": "image",
+      "description": "Retrato iluminado em fundo branco, com frase motivacional e estilo clean.",
+      "creatorId": [2]
+    },
+    {
+      "id": 33,
+      "name": "Advogada – Erros Comuns",
+      "image": "advogada_5.png",
+      "type": "image",
+      "description": "Foto corporativa com fundo envidraçado, destacando erros que advogados devem evitar.",
+      "creatorId": [2]
+    },
+    {
+      "id": 34,
+      "name": "Bloco Vem Aí",
+      "image": "IMG_BlocoVemAi.png",
+      "type": "image",
+      "description": "Composição colorida em azul, amarelo e rosa anunciando bloco de carnaval com clima vibrante.",
+      "creatorId": [2]
+    },
+    {
+      "id": 35,
+      "name": "Faepi – Adimplente Premiado",
+      "image": "IMG_Faepi.png",
+      "type": "image",
+      "description": "Campanha em laranja oferecendo prêmios para alunos adimplentes, com mulher segurando dinheiro.",
+      "creatorId": [2]
+    },
+    {
+      "id": 36,
+      "name": "Faepi – Fatos Interessantes",
+      "image": "IMG_Faepi2.png",
+      "type": "image",
+      "description": "Layout azul e laranja com estudante segurando tablet e título 'Fatos Interessantes'.",
+      "creatorId": [2]
+    },
+    {
+      "id": 37,
+      "name": "Petshop – Vantagens de Adotar",
+      "image": "IMG_Petshop.png",
+      "type": "image",
+      "description": "Mulher abraçando cachorro sobre fundo azul e amarelo, destacando benefícios de adoção.",
+      "creatorId": [2]
+    },
+    {
+      "id": 38,
+      "name": "Petshop – Rações",
+      "image": "IMG_Petshop2.png",
+      "type": "image",
+      "description": "Produtos de ração em destaque sobre fundo azul, com foco em qualidade alimentar.",
+      "creatorId": [2]
+    },
+    {
+      "id": 39,
+      "name": "Petshop – Petiscos",
+      "image": "IMG_Petshop3.png",
+      "type": "image",
+      "description": "Background amarelo vibrante, petiscos e cachorro lambendo brinquedo no centro.",
+      "creatorId": [2]
+    }
+  ]
+}
