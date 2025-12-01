@@ -42,6 +42,26 @@ export default function Home() {
       >
         <InitialSection />
 
+        {sortedCreators.map((creator) => {
+          const projectsFromCreator = projects.filter((p) =>
+            p.creatorId.includes(creator.id)
+          );
+
+          if (projectsFromCreator.length === 0) return null;
+
+          return (
+            <ProjectsSection
+              key={creator.id}
+              creator={creator}
+              projects={projectsFromCreator}
+            />
+          );
+        })}
+
+        <ServicesSection />
+
+        <ContactSection />
+
         <Footer />
       </main>
     </div>
