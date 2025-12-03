@@ -53,10 +53,7 @@ export function ProjectsSection({ creator, projects }: ProjectsSectionProps) {
         opacity: 1,
         x: 0,
         y: 0,
-        transition: {
-          duration: 0.4,
-          delay,
-        },
+        transition: { duration: 0.4, delay },
       }),
     }),
     [isMobile, reduced]
