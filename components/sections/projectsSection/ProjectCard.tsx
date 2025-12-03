@@ -49,9 +49,9 @@ export function ProjectCard({
       animate={isInView ? "visible" : "hidden"}
       variants={variants}
       className="
-        rounded-2xl overflow-hidden bg-white/5 backdrop-blur-md 
-        border border-white/10 shadow-xl p-5
-        hover:border-white/20 hover:shadow-2xl 
+        rounded-2xl overflow-hidden bg-zinc-100/5 backdrop-blur-md
+        border border-white/10 p-5 shadow-lg/20 shadow-background/20
+        hover:border-white/30 hover:shadow-lg/80
         transition-all
       "
     >
@@ -121,8 +121,8 @@ export function ProjectCard({
               <span
                 key={tag}
                 className="
-                  px-3 py-1 text-[10px] uppercase tracking-widest 
-                  bg-white/10 border border-white/10 rounded-full 
+                  px-3 py-1 text-[10px] uppercase tracking-widest
+                  bg-white/10 border border-white/10 rounded-full
                   text-neutral-100 font-semibold
                 "
               >
@@ -137,10 +137,10 @@ export function ProjectCard({
         <div className="space-y-3 mt-4">
           <span
             className="
-            inline-block px-3 py-1 text-[10px] font-semibold uppercase 
-            tracking-widest bg-white/10 border border-white/10 rounded-full 
-            text-neutral-100
-          "
+              inline-block px-3 py-1 text-[10px] font-semibold uppercase
+              tracking-widest bg-white/10 border border-white/10 rounded-full
+              text-neutral-100
+            "
           >
             Vídeo
           </span>
