@@ -9,6 +9,7 @@ import {
   CarouselItem,
 } from "@/components/ui/carousel";
 import Image from "next/image";
+import { Button } from "@/components/ui/button";
 import data from "../../../public/assets/data/data.json";
 
 export function InitialSectionSM() {
@@ -18,7 +19,11 @@ export function InitialSectionSM() {
 
   const variants = {
     initial: reduced ? { opacity: 0 } : { opacity: 0, x: -60 },
-    show: { opacity: 1, x: 0, transition: { duration: 0.4 } },
+    show: (delay = 0) => ({
+      opacity: 1,
+      x: 0,
+      transition: { duration: 0.4, delay },
+    }),
   };
 
   const plugin = useMemo(
@@ -34,20 +39,44 @@ export function InitialSectionSM() {
   return (
     <section
       role="region"
-      aria-labelledby="home-title"
-      className="w-full max-w-xs mx-auto px-4 flex min-h-screen items-center justify-center"
+      aria-labelledby="home-title-md"
+      className="w-full max-w-4xl mx-auto flex flex-col min-h-screen items-center justify-center px-6 pt-6 pb-14"
     >
-      <motion.div
-        ref={ref}
-        initial="initial"
-        animate={inView ? "show" : "initial"}
-        variants={variants}
-        className="w-full flex flex-col items-center justify-center"
-      >
-        <h1 id="home-title" className="sr-only">
-          Portfólio – Design Premium
-        </h1>
+      <div className="flex flex-col justify-center items-center pt-16 pb-4 max-w-2xl mx-auto">
+        <motion.h1
+          id="home-title-md"
+          ref={ref}
+          initial="initial"
+          animate={inView ? "show" : "initial"}
+          variants={variants}
+          custom={0.2}
+          className="
+            uppercase font-black leading-[0.85em]
+            text-[clamp(3.4rem,10vw,6.4rem)]
+            -ml-1 tracking-tight
+          "
+        >
+          Portfolio
+        </motion.h1>
 
+        <motion.p
+          initial="initial"
+          animate={inView ? "show" : "initial"}
+          variants={variants}
+          custom={0.4}
+          className="leading-relaxed text-[clamp(0.85rem,1.2vw,1rem)] text-foreground/60 max-w-md mt-4 text-center"
+        >
+          Criamos projetos de design para empresas de alto padrão <br />
+          direcionados para impacto, estética e excelência visual.
+        </motion.p>
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, x: -60 }}
+        animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: 0 }}
+        transition={{ duration: 0.4, delay: 0.4 }}
+        className="-ml-2"
+      >
         <Carousel
           plugins={[plugin]}
           className="w-full max-w-xs"
@@ -67,7 +96,7 @@ export function InitialSectionSM() {
                     height={500}
                     loading="eager"
                     className="object-cover"
-                    sizes="90vw"
+                    sizes="60vw"
                     priority={index === 0}
                   />
                 </div>
@@ -75,6 +104,27 @@ export function InitialSectionSM() {
             ))}
           </CarouselContent>
         </Carousel>
+      </motion.div>
+
+      <motion.div
+        initial="initial"
+        animate={inView ? "show" : "initial"}
+        variants={variants}
+        custom={0.8}
+        className="mt-10"
+      >
+        <Button
+          size="lg"
+          className="
+            bg-purple-500 hover:bg-purple-600 
+            transition-all text-lg py-6
+            text-[clamp(0.875rem,1vw,1rem)] uppercase
+            shadow-xl shadow-purple-500/20 hover:shadow-purple-500/30
+            text-neutral-200
+          "
+        >
+          Vamos trabalhar juntos
+        </Button>
       </motion.div>
     </section>
   );
