@@ -55,32 +55,33 @@ export function ServicesSection() {
 
   const motionConfig: MotionConfig = useMemo(() => {
     if (reduced) return { direction: "none", reducedMotion: true };
-    return {
-      direction: isMobile ? "x" : "y",
-      reducedMotion: false,
-    };
+    return { direction: isMobile ? "x" : "y", reducedMotion: false };
   }, [isMobile, reduced]);
 
   const { direction, reducedMotion } = motionConfig;
   const isMobileDirection = direction === "x";
 
-  const createVariants = (delay = 0) => ({
-    hidden: {
-      opacity: 0,
-      x: reducedMotion ? 0 : isMobileDirection ? 40 : 0,
-      y: reducedMotion ? 0 : !isMobileDirection ? 40 : 0,
-    },
-    visible: {
-      opacity: 1,
-      x: 0,
-      y: 0,
-      transition: {
-        duration: 0.3,
-        delay,
-        ease: [0.16, 0.84, 0.44, 1],
-      },
-    },
-  } as const);
+  const variants = useMemo(
+    () =>
+      (delay = 0) =>
+        ({
+          hidden: {
+            opacity: 0,
+            x: reducedMotion ? 0 : isMobileDirection ? 40 : 0,
+            y: reducedMotion ? 0 : !isMobileDirection ? 40 : 0,
+          },
+          visible: {
+            opacity: 1,
+            x: 0,
+            y: 0,
+            transition: {
+              duration: 0.4,
+              delay,
+            },
+          },
+        } as const),
+    [isMobileDirection, reducedMotion]
+  );
 
   const ctaRef = useRef(null);
   const ctaInView = useInView(ctaRef, { once: true, margin: "-12%" });
@@ -104,7 +105,7 @@ export function ServicesSection() {
           ref={ctaRef}
           initial="hidden"
           animate={ctaInView ? "visible" : "hidden"}
-          variants={createVariants(0.3)}
+          variants={variants(0.4)}
           className="w-full flex justify-center pt-8"
         >
           <Button

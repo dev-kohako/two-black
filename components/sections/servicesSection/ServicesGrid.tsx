@@ -1,22 +1,25 @@
 "use client";
 
 import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useMemo } from "react";
 import { ServiceCard } from "./ServiceCard";
 
 export function ServicesGrid({ services, motionConfig }: ServicesGridProps) {
   const gridRef = useRef(null);
   const gridInView = useInView(gridRef, { once: true, margin: "-18%" });
 
-  const containerVariants = {
-    hidden: {},
-    visible: {
-      transition: {
-        staggerChildren: 0.12,
-        delayChildren: 0.25,
+  const containerVariants = useMemo(
+    () => ({
+      hidden: {},
+      visible: {
+        transition: {
+          staggerChildren: 0.12,
+          delayChildren: 0.25,
+        },
       },
-    },
-  };
+    }),
+    []
+  );
 
   return (
     <motion.ul
@@ -28,7 +31,7 @@ export function ServicesGrid({ services, motionConfig }: ServicesGridProps) {
       variants={containerVariants}
       className="
         grid gap-10 w-full
-        sm:grid-cols-2 
+        sm:grid-cols-2
         lg:grid-cols-3
       "
     >

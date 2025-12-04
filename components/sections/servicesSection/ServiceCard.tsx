@@ -17,7 +17,7 @@ import {
   Lightbulb,
 } from "lucide-react";
 
-import { JSX } from "react";
+import { JSX, useMemo } from "react";
 
 const ICON_MAP: Record<string, JSX.Element> = {
   "Direção Criativa": <Sparkles className="w-7 h-7 text-neutral-900" />,
@@ -28,40 +28,36 @@ const ICON_MAP: Record<string, JSX.Element> = {
   "Consultoria Estética": <Lightbulb className="w-7 h-7 text-neutral-900" />,
 };
 
-interface ServiceCardProps {
-  service: ServiceItem;
-  motionConfig: MotionConfig;
-}
-
 export function ServiceCard({ service, motionConfig }: ServiceCardProps) {
   const { direction, reducedMotion } = motionConfig;
 
-  const isMobileDirection = direction === "x";
+  const variants = useMemo(() => {
+    const isMobile = direction === "x";
 
-  const cardVariants = {
-    hidden: {
-      opacity: 0,
-      x: !reducedMotion && isMobileDirection ? 40 : 0,
-      y: !reducedMotion && !isMobileDirection ? 40 : 0,
-      scale: reducedMotion ? 1 : 0.95,
-    },
-    visible: {
-      opacity: 1,
-      x: 0,
-      y: 0,
-      scale: 1,
-      transition: {
-        duration: 0.3,
-        ease: [0.16, 0.84, 0.44, 1],
+    return {
+      hidden: {
+        opacity: 0,
+        x: !reducedMotion && isMobile ? 40 : 0,
+        y: !reducedMotion && !isMobile ? 40 : 0,
+        scale: reducedMotion ? 1 : 0.95,
       },
-    },
-  } as const;
+      visible: {
+        opacity: 1,
+        x: 0,
+        y: 0,
+        scale: 1,
+        transition: {
+          duration: 0.4,
+        },
+      },
+    } as const;
+  }, [direction, reducedMotion]);
 
   return (
     <motion.li
       role="listitem"
       aria-label={service.title}
-      variants={cardVariants}
+      variants={variants}
       className="h-full"
     >
       <Card
