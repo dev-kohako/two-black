@@ -2,58 +2,57 @@
 
 import { motion, useInView } from "framer-motion";
 import { Separator } from "@radix-ui/react-separator";
-import { useRef } from "react";
+import { useRef, useMemo } from "react";
 
 export function SectionHeader({ sectionId, motionConfig }: SectionHeaderProps) {
   const { direction, reducedMotion } = motionConfig;
 
-  const isMobileDirection = direction === "x";
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-18%" });
 
-  const headerRef = useRef(null);
-  const headerInView = useInView(headerRef, { once: true, margin: "-18%" });
+  const variants = useMemo(() => {
+    const isMobile = direction === "x";
 
-  const baseHidden = {
-    opacity: 0,
-    x: !reducedMotion && isMobileDirection ? 40 : 0,
-    y: !reducedMotion && !isMobileDirection ? 40 : 0,
-  };
+    const hidden = {
+      opacity: 0,
+      x: !reducedMotion && isMobile ? 40 : 0,
+      y: !reducedMotion && !isMobile ? 40 : 0,
+    };
 
-  const containerVariants = {
-    hidden: {},
-    visible: {
-      transition: {
-        staggerChildren: 0.12,
-        delayChildren: 0.15,
-      },
-    },
-  } as const;
-
-  const createVariants = (delay = 0) =>
-    ({
-      hidden: baseHidden,
-      visible: {
-        opacity: 1,
-        x: 0,
-        y: 0,
-        transition: {
-          duration: 0.3,
-          delay,
-          ease: [0.16, 0.84, 0.44, 1],
+    return {
+      container: {
+        hidden: {},
+        visible: {
+          transition: {
+            staggerChildren: 0.12,
+            delayChildren: 0.15,
+          },
         },
       },
-    } as const);
+      item: (delay = 0) => ({
+        hidden,
+        visible: {
+          opacity: 1,
+          x: 0,
+          y: 0,
+          transition: { duration: 0.4, delay },
+        },
+      }),
+    };
+  }, [direction, reducedMotion]);
 
   return (
     <motion.header
-      ref={headerRef}
-      variants={containerVariants}
+      ref={ref}
       initial="hidden"
-      animate={headerInView ? "visible" : "hidden"}
+      animate={inView ? "visible" : "hidden"}
+      variants={variants.container}
+      aria-labelledby={`${sectionId}-title`}
       className="w-full space-y-6"
     >
       <motion.h2
         id={`${sectionId}-title`}
-        variants={createVariants(0.15)}
+        variants={variants.item(0)}
         className="
           font-black uppercase tracking-tight text-neutral-900
           leading-[0.9]
@@ -64,14 +63,14 @@ export function SectionHeader({ sectionId, motionConfig }: SectionHeaderProps) {
       </motion.h2>
 
       <motion.p
-        variants={createVariants(0.3)}
+        variants={variants.item(0.2)}
         className="text-lg text-neutral-700 max-w-2xl leading-relaxed"
       >
         Serviços desenvolvidos para elevar marcas, construir narrativas visuais
         sólidas e entregar experiências de alto padrão com precisão estética.
       </motion.p>
 
-      <motion.div variants={createVariants(0.45)}>
+      <motion.div variants={variants.item(0.4)}>
         <Separator className="bg-neutral-900/10 h-0.5 w-full" />
       </motion.div>
     </motion.header>
