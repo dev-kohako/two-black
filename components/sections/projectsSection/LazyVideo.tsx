@@ -17,7 +17,8 @@ export function LazyVideo({
       if (entries[0].isIntersecting) setCanPlay(true);
     });
 
-    if (ref.current) observer.observe(ref.current);
+    const el = ref.current;
+    if (el) observer.observe(el);
 
     return () => observer.disconnect();
   }, []);
