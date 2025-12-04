@@ -27,7 +27,7 @@ const creatorStyleMap: Record<
 > = {
   home: {
     linkColor: "text-zinc-900",
-    header: "bg-background/70",
+    header: "bg-background/70 border-b border-zinc-900/10",
     logoColor: "text-zinc-900",
     hamburgerColor: "text-foreground",
   },
@@ -45,7 +45,7 @@ const creatorStyleMap: Record<
   },
   services: {
     linkColor: "text-zinc-900",
-    header: "bg-background/70",
+    header: "bg-background/70 border-b border-zinc-900/10",
     logoColor: "text-zinc-900",
     hamburgerColor: "text-foreground",
   },
@@ -120,7 +120,7 @@ export default function Header() {
               key={href}
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: index * 0.1 }}
+              transition={{ duration: 0.4, delay: index * 0.2 }}
             >
               <Button
                 variant="link"

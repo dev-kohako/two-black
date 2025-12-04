@@ -70,33 +70,40 @@ export function InitialSectionMD() {
         </motion.p>
       </div>
 
-      <Carousel
-        plugins={[plugin]}
-        className="w-full max-w-xs"
-        onMouseEnter={plugin.stop}
-        onMouseLeave={plugin.reset}
-        opts={{ loop: true }}
-        aria-label="Carrossel de designers Igor e Vlaisson"
+      <motion.div
+        initial={{ opacity: 0, x: -60 }}
+        animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: 0 }}
+        transition={{ duration: 0.4, delay: 0.4 }}
+        className="-ml-2"
       >
-        <CarouselContent>
-          {data.sobre.map((item, index) => (
-            <CarouselItem key={item.id ?? index}>
-              <div className="p-1 pt-6">
-                <Image
-                  src={`/assets/images/${item.image}`}
-                  alt={`Imagem de ${item.name}`}
-                  width={500}
-                  height={500}
-                  loading="eager"
-                  className="object-cover"
-                  sizes="60vw"
-                  priority={index === 0}
-                />
-              </div>
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-      </Carousel>
+        <Carousel
+          plugins={[plugin]}
+          className="w-full max-w-xs"
+          onMouseEnter={plugin.stop}
+          onMouseLeave={plugin.reset}
+          opts={{ loop: true }}
+          aria-label="Carrossel de designers Igor e Vlaisson"
+        >
+          <CarouselContent>
+            {data.sobre.map((item, index) => (
+              <CarouselItem key={item.id ?? index}>
+                <div className="p-1 pt-6">
+                  <Image
+                    src={`/assets/images/${item.image}`}
+                    alt={`Imagem de ${item.name}`}
+                    width={500}
+                    height={500}
+                    loading="eager"
+                    className="object-cover"
+                    sizes="60vw"
+                    priority={index === 0}
+                  />
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+        </Carousel>
+      </motion.div>
 
       <motion.div
         initial="initial"

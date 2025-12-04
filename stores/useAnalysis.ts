@@ -7,14 +7,17 @@ import { createImageWorker } from "@/lib/imageWorkerLoader";
 
 function loadCache(): Record<number, ImageAnalysis> {
   try {
-    return JSON.parse(localStorage.getItem("analysis-cache") || "{}");
+    const data = localStorage.getItem("analysis-cache");
+    return data ? JSON.parse(data) : {};
   } catch {
     return {};
   }
 }
 
 function saveCache(cache: Record<number, ImageAnalysis>) {
-  localStorage.setItem("analysis-cache", JSON.stringify(cache));
+  try {
+    localStorage.setItem("analysis-cache", JSON.stringify(cache));
+  } catch {}
 }
 
 export const useAnalysis = create<AnalysisState>((set, get) => ({
@@ -28,14 +31,12 @@ export const useAnalysis = create<AnalysisState>((set, get) => ({
 
     const worker = createImageWorker();
     const creators = rawData.sobre;
-
     const cache = loadCache();
     const results: Record<number, ImageAnalysis> = { ...cache };
 
     const filtered = items.filter((item) => {
       if (item.type === "video") return false;
-      if (!item.image.match(/\.(png|jpg|jpeg)$/i)) return false;
-      return true;
+      return /\.(png|jpg|jpeg)$/i.test(item.image);
     });
 
     const toAnalyze = filtered.filter((item) => !cache[item.id]);
@@ -44,8 +45,6 @@ export const useAnalysis = create<AnalysisState>((set, get) => ({
       set({ data: results, isLoading: false });
       return;
     }
-
-    console.log("%cANALYZER (worker) → " + toAnalyze.length, "color:#4ade80");
 
     let pending = toAnalyze.length;
 
@@ -68,7 +67,6 @@ export const useAnalysis = create<AnalysisState>((set, get) => ({
       const creator = creators.find((c) => item.creatorId.includes(c.id));
       const folder = creator?.imageFolder || "default";
       const src = `/assets/${folder}/${item.image}`;
-
       worker.postMessage({ id: item.id, src });
     });
 
@@ -80,7 +78,5 @@ export const useAnalysis = create<AnalysisState>((set, get) => ({
       data: results,
       isLoading: false,
     });
-
-    console.log("%cANALYZER → done", "color:#4ade80");
   },
 }));

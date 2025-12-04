@@ -32,6 +32,7 @@ export function InitialSectionLG() {
           initial="initial"
           animate={inView ? "show" : "initial"}
           variants={variants}
+          custom={0.2}
           className="
             uppercase font-black leading-[0.85em]
             text-[clamp(3.4rem,9vw,9rem)]
@@ -47,7 +48,7 @@ export function InitialSectionLG() {
           initial="initial"
           animate={inView ? "show" : "initial"}
           variants={variants}
-          custom={0.2}
+          custom={0.4}
           className="leading-relaxed text-[clamp(0.85rem,1.2vw,1.15rem)] text-foreground/60 max-w-md mt-4"
         >
           Criamos projetos de design para empresas de alto padrão — direcionados
@@ -58,7 +59,7 @@ export function InitialSectionLG() {
           initial="initial"
           animate={inView ? "show" : "initial"}
           variants={variants}
-          custom={0.4}
+          custom={0.6}
           className="mt-10"
         >
           <Button
@@ -79,7 +80,7 @@ export function InitialSectionLG() {
       <motion.div
         initial={{ opacity: 0, x: 60 }}
         animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: 60 }}
-        transition={{ duration: 0.4, delay: 0.6 }}
+        transition={{ duration: 0.4, delay: 0.4 }}
         className="-ml-2"
       >
         <Image

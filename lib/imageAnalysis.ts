@@ -23,6 +23,7 @@ export async function analyzeImage(src: string): Promise<ImageAnalysis> {
 
   const composition = detectCompositionFromName(src);
   const focus = detectFocus(img);
+
   const style = detectStyle({
     vibrance,
     brightness,
@@ -55,9 +56,10 @@ export async function analyzeImage(src: string): Promise<ImageAnalysis> {
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
+    img.decoding = "async";
     img.src = src;
     img.onload = () => resolve(img);
-    img.onerror = reject;
+    img.onerror = () => reject(new Error("Image failed to load: " + src));
   });
 }
 
@@ -65,28 +67,25 @@ function extractPalette(img: HTMLImageElement, paletteSize = 6): string[] {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d")!;
 
-  const maxSize = 80;
+  const maxSize = 84;
   const scale = Math.min(maxSize / img.width, maxSize / img.height, 1);
   const width = Math.max(1, Math.round(img.width * scale));
   const height = Math.max(1, Math.round(img.height * scale));
 
   canvas.width = width;
   canvas.height = height;
+
   ctx.drawImage(img, 0, 0, width, height);
 
   const { data } = ctx.getImageData(0, 0, width, height);
 
   const buckets: Record<string, number> = {};
-  for (let i = 0; i < data.length; i += 4 * 2) {
+  for (let i = 0; i < data.length; i += 8) {
     const r = data[i];
     const g = data[i + 1];
     const b = data[i + 2];
 
-    const bucketR = Math.floor(r / 32);
-    const bucketG = Math.floor(g / 32);
-    const bucketB = Math.floor(b / 32);
-
-    const key = `${bucketR},${bucketG},${bucketB}`;
+    const key = `${r >> 5},${g >> 5},${b >> 5}`;
     buckets[key] = (buckets[key] || 0) + 1;
   }
 
@@ -98,33 +97,30 @@ function extractPalette(img: HTMLImageElement, paletteSize = 6): string[] {
 
   for (const [key] of sortedBuckets) {
     const [br, bg, bb] = key.split(",").map((v) => parseInt(v, 10));
+
     const r = br * 32 + 16;
     const g = bg * 32 + 16;
     const b = bb * 32 + 16;
 
     const hex = rgbToHex(r, g, b);
-
     const { s } = hexToHsl(hex);
+
     if (s < 0.12) continue;
 
-    const isDuplicate = colors.some((c) => colorDistance(c, hex) < 12);
-    if (isDuplicate) continue;
+    const duplicate = colors.some((c) => colorDistance(c, hex) < 14);
+    if (duplicate) continue;
 
     colors.push(hex);
     if (colors.length >= paletteSize) break;
   }
 
-  if (colors.length === 0) {
-    return ["#999999"];
-  }
-
-  return colors;
+  return colors.length > 0 ? colors : ["#999999"];
 }
 
-function colorDistance(hex1: string, hex2: string): number {
-  const { r: r1, g: g1, b: b1 } = hexToRgb(hex1);
-  const { r: r2, g: g2, b: b2 } = hexToRgb(hex2);
-  return Math.sqrt((r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2);
+function colorDistance(a: string, b: string): number {
+  const c1 = hexToRgb(a);
+  const c2 = hexToRgb(b);
+  return Math.hypot(c1.r - c2.r, c1.g - c2.g, c1.b - c2.b);
 }
 
 function calculateVibrance(colors: string[]): number {
@@ -132,9 +128,8 @@ function calculateVibrance(colors: string[]): number {
     avg(
       colors.map((hex) => {
         const { r, g, b } = hexToRgb(hex);
-        const max = Math.max(r, g, b);
-        const min = Math.min(r, g, b);
-        return ((max - min) / 255) * 100;
+        const diff = Math.max(r, g, b) - Math.min(r, g, b);
+        return (diff / 255) * 100;
       })
     )
   );
@@ -153,25 +148,18 @@ function calculateBrightness(colors: string[]): number {
 
 function calculateAverageSaturation(colors: string[]): number {
   return Math.round(
-    avg(
-      colors.map((hex) => {
-        const { s } = hexToHsl(hex);
-        return s * 100;
-      })
-    )
+    avg(colors.map((hex) => hexToHsl(hex).s * 100))
   );
 }
 
 function detectCompositionFromName(src: string): string {
   const name = src.toLowerCase();
 
-  if (name.includes("pet") || name.includes("dog") || name.includes("petshop")) {
+  if (name.includes("pet") || name.includes("dog") || name.includes("petshop"))
     return "Petshop";
-  }
 
-  if (name.includes("advog") || name.includes("jurid") || name.includes("debora")) {
+  if (name.includes("advog") || name.includes("jurid") || name.includes("debora"))
     return "Corporativo";
-  }
 
   if (
     name.includes("ideal") ||
@@ -179,22 +167,19 @@ function detectCompositionFromName(src: string): string {
     name.includes("medic") ||
     name.includes("odonto") ||
     name.includes("lg_odonto")
-  ) {
+  )
     return "Farmacêutico";
-  }
 
   if (
     name.includes("fitness") ||
     name.includes("rs_fitness") ||
     name.includes("academia") ||
     name.includes("treino")
-  ) {
+  )
     return "Fitness";
-  }
 
-  if (name.includes("faepi") || name.includes("enem") || name.includes("curso")) {
+  if (name.includes("faepi") || name.includes("enem") || name.includes("curso"))
     return "Educacional";
-  }
 
   if (
     name.includes("vaquej") ||
@@ -202,9 +187,8 @@ function detectCompositionFromName(src: string): string {
     name.includes("saojoao") ||
     name.includes("sorteio") ||
     name.includes("evento")
-  ) {
+  )
     return "Evento";
-  }
 
   return "Genérico";
 }
@@ -215,58 +199,43 @@ function detectFocus(img: HTMLImageElement): string {
   return "Centralizado";
 }
 
-function detectStyle(params: {
+function detectStyle({
+  vibrance,
+  brightness,
+  avgSaturation,
+  composition,
+  palette,
+}: {
   vibrance: number;
   brightness: number;
   avgSaturation: number;
   composition: string;
   palette: string[];
 }): string[] {
-  const { vibrance, brightness, avgSaturation, composition, palette } = params;
-
   const styles: string[] = [];
 
-  const hasNearBlack = palette.some((p) => p.toLowerCase().includes("000000"));
-  const hasNearWhite = palette.some((p) => p.toLowerCase().includes("ffffff"));
+  const hasBlack = palette.some((p) => p.includes("000000"));
+  const hasWhite = palette.some((p) => p.includes("ffffff"));
 
-  if (vibrance >= 60 && avgSaturation >= 60) {
+  if (vibrance >= 60 && avgSaturation >= 60) styles.push("Vibrante");
+  if (brightness >= 65 && avgSaturation <= 80) styles.push("Clean");
+  if (brightness <= 35) styles.push("Dark");
+  if (hasBlack && (hasWhite || brightness >= 55) && vibrance <= 50)
+    styles.push("Minimalista");
+  if (avgSaturation <= 40 && brightness >= 55) styles.push("Pastel");
+
+  if (composition === "Petshop" && vibrance >= 55 && brightness >= 55)
     styles.push("Vibrante");
-  }
 
-  if (brightness >= 65 && avgSaturation <= 80) {
-    styles.push("Clean");
-  }
-
-  if (brightness <= 35) {
+  if (composition === "Corporativo" && hasBlack) {
     styles.push("Dark");
-  }
-
-  if (hasNearBlack && (hasNearWhite || brightness >= 55) && vibrance <= 50) {
     styles.push("Minimalista");
   }
 
-  if (avgSaturation <= 40 && brightness >= 55) {
-    styles.push("Pastel");
-  }
+  if (composition === "Farmacêutico" && brightness >= 60)
+    styles.push("Clean");
 
-  if (composition === "Petshop" && vibrance >= 55 && brightness >= 55) {
-    if (!styles.includes("Vibrante")) styles.push("Vibrante");
-  }
-
-  if (composition === "Corporativo" && hasNearBlack) {
-    if (!styles.includes("Dark")) styles.push("Dark");
-    if (!styles.includes("Minimalista")) styles.push("Minimalista");
-  }
-
-  if (composition === "Farmacêutico" && brightness >= 60) {
-    if (!styles.includes("Clean")) styles.push("Clean");
-  }
-
-  if (styles.length === 0) {
-    styles.push("Neutro");
-  }
-
-  return Array.from(new Set(styles));
+  return styles.length ? Array.from(new Set(styles)) : ["Neutro"];
 }
 
 function generateTags({
@@ -285,10 +254,8 @@ function generateTags({
   const tags: string[] = [];
 
   style.forEach((s) => tags.push(s.toUpperCase()));
-
   tags.push(composition.toUpperCase());
-
-  if (palette[0]) tags.push(`COR DOMINANTE: ${palette[0].toUpperCase()}`);
+  tags.push(`COR DOMINANTE: ${palette[0].toUpperCase()}`);
 
   if (brightness >= 65 && vibrance <= 40) tags.push("SUAVE");
   if (brightness <= 40 && vibrance >= 50) tags.push("DRAMÁTICO");
@@ -296,16 +263,16 @@ function generateTags({
   return tags;
 }
 
-function avg(arr: number[]) {
-  return arr.length === 0 ? 0 : arr.reduce((a, b) => a + b, 0) / arr.length;
+function avg(arr: number[]): number {
+  return arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
 }
 
-function rgbToHex(r: number, g: number, b: number) {
-  return `#${[r, g, b].map((x) => x.toString(16).padStart(2, "0")).join("")}`;
+function rgbToHex(r: number, g: number, b: number): string {
+  return `#${[r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
 }
 
 function hexToRgb(hex: string) {
-  const n = parseInt(hex.replace("#", ""), 16);
+  const n = parseInt(hex.slice(1), 16);
   return {
     r: (n >> 16) & 255,
     g: (n >> 8) & 255,
@@ -315,12 +282,13 @@ function hexToRgb(hex: string) {
 
 function hexToHsl(hex: string) {
   const { r, g, b } = hexToRgb(hex);
-  let rN = r / 255;
-  let gN = g / 255;
-  let bN = b / 255;
+  const rn = r / 255;
+  const gn = g / 255;
+  const bn = b / 255;
 
-  const max = Math.max(rN, gN, bN);
-  const min = Math.min(rN, gN, bN);
+  const max = Math.max(rn, gn, bn);
+  const min = Math.min(rn, gn, bn);
+
   let h = 0;
   let s = 0;
   const l = (max + min) / 2;
@@ -329,17 +297,10 @@ function hexToHsl(hex: string) {
     const d = max - min;
     s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
 
-    switch (max) {
-      case rN:
-        h = (gN - bN) / d + (gN < bN ? 6 : 0);
-        break;
-      case gN:
-        h = (bN - rN) / d + 2;
-        break;
-      case bN:
-        h = (rN - gN) / d + 4;
-        break;
-    }
+    if (max === rn) h = (gn - bn) / d + (gn < bn ? 6 : 0);
+    else if (max === gn) h = (bn - rn) / d + 2;
+    else h = (rn - gn) / d + 4;
+
     h /= 6;
   }
 
