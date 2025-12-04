@@ -62,3 +62,8 @@ interface SectionState {
   currentSection: string;
   setSection: (section: string) => void;
 }
+
+interface ServiceCardProps {
+  service: ServiceItem;
+  motionConfig: MotionConfig;
+}
