@@ -1,6 +1,21 @@
+"use client";
+
 import { create } from "zustand";
 
-export const useUIStore = create((set) => ({
+interface UIState {
+  modalOpen: boolean;
+
+  setModalOpen: (value: boolean) => void;
+  openModal: () => void;
+  closeModal: () => void;
+  toggleModal: () => void;
+}
+
+export const useUIStore = create<UIState>((set) => ({
   modalOpen: false,
-  setModalOpen: (v: boolean) => set({ modalOpen: v }),
+
+  setModalOpen: (value) => set({ modalOpen: value }),
+  openModal: () => set({ modalOpen: true }),
+  closeModal: () => set({ modalOpen: false }),
+  toggleModal: () => set((s) => ({ modalOpen: !s.modalOpen })),
 }));
