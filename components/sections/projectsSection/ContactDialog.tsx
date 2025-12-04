@@ -54,7 +54,6 @@ export function ContactDialog({
         },
       };
     }
-
     return {
       initial: {
         opacity: 0,
@@ -82,6 +81,7 @@ export function ContactDialog({
           <Button
             variant="outline"
             className="bg-transparent px-10 py-6 text-base font-medium"
+            aria-label={`Abrir contato de ${creator.name}`}
           >
             Vamos trabalhar juntos
           </Button>
@@ -95,9 +95,11 @@ export function ContactDialog({
           aria-labelledby="contact-form-title"
           className="
             w-full rounded-2xl border border-white/10 
-            bg-background/80 backdrop-blur-xl shadow-2xl px-6
-            max-w-sm sm:max-w-lg
+            bg-background/80 backdrop-blur-xl shadow-2xl px-4 sm:px-6
+            max-[400]:max-w-[calc(100vw-4rem)] sm:max-w-lg overflow-y-scroll sm:overflow-hidden
+            max-h-[90vh]
           "
+          showCloseButton={false}
         >
           <DialogClose className="w-full flex justify-end cursor-pointer">
             <X className="w-5 h-5 text-foreground/80 hover:text-foreground transition" />
@@ -112,30 +114,30 @@ export function ContactDialog({
             </DialogTitle>
 
             <DialogDescription className="text-sm sm:text-base text-neutral-600 mt-2">
-              Envie seu projeto e retornaremos rapidamente com todos os detalhes.
+              Envie seu projeto e retornaremos rapidamente com todos os
+              detalhes.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex items-center gap-6 justify-between">
-            <div>
-              <Image
-                className="w-full min-w-20 min-h-40 object-contain brightness-75"
-                src={`${assetBase}/${
-                  creator.name === "Vlaisson Ribeiro"
-                    ? "vrsdsing_qr.png"
-                    : "euigordesigner_qr.png"
-                }`}
-                width={200}
-                height={200}
-                alt={`QR Code do designer ${creator.name}`}
-                sizes="200px"
-              />
-            </div>
+          <div className="flex flex-col sm:flex-row items-center gap-6 justify-between">
+            <Image
+              className="w-full min-w-20 max-w-72 min-h-40 object-contain brightness-75"
+              src={`${assetBase}/${
+                creator.name === "Vlaisson Ribeiro"
+                  ? "vrsdsing_qr.png"
+                  : "euigordesigner_qr.png"
+              }`}
+              width={200}
+              height={200}
+              alt={`QR Code do designer ${creator.name}`}
+              sizes="200px"
+            />
 
             <div className="flex flex-col justify-center gap-3 w-full">
               <Button
                 variant="ghost"
                 className="flex items-center text-xs sm:text-base gap-2 w-full tracking-wider border border-input"
+                aria-label={`Designer: ${creator.name}`}
               >
                 {creator.name}
               </Button>
@@ -150,8 +152,8 @@ export function ContactDialog({
                   rel="noopener noreferrer"
                   aria-label={`Instagram de ${creator.name}`}
                 >
-                  <Instagram className="w-4 h-4 sm:w-5 sm:h-5" />
-                  @{creator.instagramUsername}
+                  <Instagram className="w-4 h-4 sm:w-5 sm:h-5" />@
+                  {creator.instagramUsername}
                 </Link>
               </Button>
 
