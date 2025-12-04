@@ -2,7 +2,7 @@
 
 import { motion, useInView } from "framer-motion";
 import Link from "next/link";
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 
 export function ContactCard({
   name,
@@ -19,25 +19,27 @@ export function ContactCard({
   direction: "x" | "y";
   reduceMotion: boolean | null;
 }) {
-  const isMobileDirection = direction === "x";
+  const variants = useMemo(() => {
+    const isMobile = direction === "x";
 
-  const createVariants = (delay = 0) => ({
-    hidden: {
-      opacity: 0,
-      x: reduceMotion ? 0 : isMobileDirection ? 40 : 0,
-      y: reduceMotion ? 0 : !isMobileDirection ? 40 : 0,
-    },
-    visible: {
-      opacity: 1,
-      x: 0,
-      y: 0,
-      transition: {
-        duration: 0.5,
-        delay,
-        ease: [0.16, 0.84, 0.44, 1],
-      },
-    },
-  } as const);
+    return (delay = 0) =>
+      ({
+        hidden: {
+          opacity: 0,
+          x: reduceMotion ? 0 : isMobile ? 40 : 0,
+          y: reduceMotion ? 0 : !isMobile ? 40 : 0,
+        },
+        visible: {
+          opacity: 1,
+          x: 0,
+          y: 0,
+          transition: {
+            duration: 0.4,
+            delay,
+          },
+        },
+      } as const);
+  }, [direction, reduceMotion]);
 
   const nameRef = useRef(null);
   const roleRef = useRef(null);
@@ -59,7 +61,7 @@ export function ContactCard({
         ref={nameRef}
         initial="hidden"
         animate={nameInView ? "visible" : "hidden"}
-        variants={createVariants(0.15)}
+        variants={variants(0)}
         className="text-2xl font-bold text-background"
       >
         {name}
@@ -69,7 +71,7 @@ export function ContactCard({
         ref={roleRef}
         initial="hidden"
         animate={roleInView ? "visible" : "hidden"}
-        variants={createVariants(0.3)}
+        variants={variants(0.2)}
         className="text-neutral-400"
       >
         {role}
@@ -80,7 +82,7 @@ export function ContactCard({
           ref={instaRef}
           initial="hidden"
           animate={instaInView ? "visible" : "hidden"}
-          variants={createVariants(0.45)}
+          variants={variants(0.4)}
         >
           <span className="opacity-80">Instagram:</span>{" "}
           <Link
@@ -103,7 +105,7 @@ export function ContactCard({
           ref={whatsRef}
           initial="hidden"
           animate={whatsInView ? "visible" : "hidden"}
-          variants={createVariants(0.6)}
+          variants={variants(0.6)}
         >
           <span className="opacity-80">Whatsapp:</span>{" "}
           <Link
