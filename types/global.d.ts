@@ -1,3 +1,10 @@
+type AnimationDirection = "x" | "y" | "none";
+
+interface MotionConfig {
+  direction: AnimationDirection;
+  reducedMotion: boolean;
+}
+
 interface Creator {
   id: number;
   name: string;
@@ -26,13 +33,6 @@ interface ProjectsSectionProps {
 interface SectionHeaderProps {
   sectionId: string;
   motionConfig: MotionConfig;
-}
-
-type AnimationDirection = "x" | "y" | "none";
-
-interface MotionConfig {
-  direction: AnimationDirection;
-  reducedMotion: boolean;
 }
 
 interface ServiceItem {
