@@ -1,51 +1,49 @@
+type HexColor = `#${string}`;
+
 export interface ImageAnalysis {
-  palette: string[];
-  primary: string;
-  secondary: string;
+  palette: HexColor[];
+  primary: HexColor;
+  secondary: HexColor;
   vibrance: number;
   brightness: number;
   style: string[];
   composition: string;
-  focus: string;
+  focus: "horizontal" | "vertical" | "square";
   tags: string[];
 }
 
-export async function analyzeImage(src: string): Promise<ImageAnalysis> {
-  const img = await loadImage(src);
+interface AnalysisOptions {
+  maxSize?: number;
+  paletteSize?: number;
+  category?: string;
+}
 
-  const palette = extractPalette(img, 6);
-  const primary = palette[0];
+export async function analyzeImage(
+  src: string,
+  options: AnalysisOptions = {}
+): Promise<ImageAnalysis> {
+  const { maxSize = 96, paletteSize = 6, category } = options;
+
+  const img = await loadImage(src);
+  const palette = await extractBetterPalette(img, paletteSize, maxSize);
+
+  const primary = palette[0] ?? ("#999999" as HexColor);
   const secondary = palette[1] ?? primary;
 
-  const vibrance = calculateVibrance(palette);
-  const brightness = calculateBrightness(palette);
-  const avgSaturation = calculateAverageSaturation(palette);
+  const metrics = calculateColorMetrics(palette);
 
-  const composition = detectCompositionFromName(src);
-  const focus = detectFocus(img);
+  const composition = category ?? detectCompositionFromName(src);
+  const focus = detectFocusType(img);
 
-  const style = detectStyle({
-    vibrance,
-    brightness,
-    avgSaturation,
-    composition,
-    palette,
-  });
-
-  const tags = generateTags({
-    palette,
-    style,
-    composition,
-    brightness,
-    vibrance,
-  });
+  const style = detectStyleV2({ ...metrics, composition, palette });
+  const tags = generateTagsV2({ ...metrics, style, composition, palette });
 
   return {
     palette,
     primary,
     secondary,
-    vibrance,
-    brightness,
+    vibrance: metrics.vibrance,
+    brightness: metrics.brightness,
     style,
     composition,
     focus,
@@ -63,93 +61,143 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-function extractPalette(img: HTMLImageElement, paletteSize = 6): string[] {
+async function extractBetterPalette(
+  img: HTMLImageElement,
+  count: number,
+  maxSize: number
+): Promise<HexColor[]> {
   const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d")!;
+  const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
 
-  const maxSize = 84;
   const scale = Math.min(maxSize / img.width, maxSize / img.height, 1);
-  const width = Math.max(1, Math.round(img.width * scale));
-  const height = Math.max(1, Math.round(img.height * scale));
+  canvas.width = Math.max(1, Math.round(img.width * scale));
+  canvas.height = Math.max(1, Math.round(img.height * scale));
 
-  canvas.width = width;
-  canvas.height = height;
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-  ctx.drawImage(img, 0, 0, width, height);
+  const { data, width, height } = ctx.getImageData(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+  const pixels: [number, number, number][] = [];
 
-  const { data } = ctx.getImageData(0, 0, width, height);
+  const step = Math.max(1, Math.floor(Math.sqrt(data.length / 4 / 2500)));
 
-  const buckets: Record<string, number> = {};
-  for (let i = 0; i < data.length; i += 8) {
-    const r = data[i];
-    const g = data[i + 1];
-    const b = data[i + 2];
-
-    const key = `${r >> 5},${g >> 5},${b >> 5}`;
-    buckets[key] = (buckets[key] || 0) + 1;
+  for (let y = 0; y < height; y += step) {
+    for (let x = 0; x < width; x += step) {
+      const i = (y * width + x) * 4;
+      const r = data[i],
+        g = data[i + 1],
+        b = data[i + 2];
+      if (r > 235 && g > 235 && b > 235) continue;
+      pixels.push([r, g, b]);
+    }
   }
 
-  const sortedBuckets = Object.entries(buckets)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, paletteSize * 3);
+  const buckets: Record<
+    string,
+    { count: number; r: number; g: number; b: number }
+  > = {};
 
-  const colors: string[] = [];
+  for (const [r, g, b] of pixels) {
+    const key = `${r >> 2},${g >> 2},${b >> 2}`;
+    if (!buckets[key]) buckets[key] = { count: 0, r: 0, g: 0, b: 0 };
+    const bucket = buckets[key];
+    bucket.count++;
+    bucket.r += r;
+    bucket.g += g;
+    bucket.b += b;
+  }
 
-  for (const [key] of sortedBuckets) {
-    const [br, bg, bb] = key.split(",").map((v) => parseInt(v, 10));
+  const sorted = Object.values(buckets)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, count * 4);
 
-    const r = br * 32 + 16;
-    const g = bg * 32 + 16;
-    const b = bb * 32 + 16;
+  const colors: HexColor[] = [];
 
-    const hex = rgbToHex(r, g, b);
+  for (const { count, r, g, b } of sorted) {
+    const avgR = Math.round(r / count);
+    const avgG = Math.round(g / count);
+    const avgB = Math.round(b / count);
+
+    const hex = rgbToHex(avgR, avgG, avgB) as HexColor;
     const { s } = hexToHsl(hex);
 
-    if (s < 0.12) continue;
+    if (s < 0.08) continue;
 
-    const duplicate = colors.some((c) => colorDistance(c, hex) < 14);
-    if (duplicate) continue;
+    if (colors.some((c) => colorDeltaE(c, hex) < 12)) continue;
 
     colors.push(hex);
-    if (colors.length >= paletteSize) break;
+    if (colors.length >= count) break;
   }
 
-  return colors.length > 0 ? colors : ["#999999"];
+  return colors.length > 0 ? colors : ["#888888" as HexColor];
 }
 
-function colorDistance(a: string, b: string): number {
-  const c1 = hexToRgb(a);
-  const c2 = hexToRgb(b);
-  return Math.hypot(c1.r - c2.r, c1.g - c2.g, c1.b - c2.b);
+function colorDeltaE(a: string, b: string): number {
+  const labA = rgbToLab(hexToRgb(a));
+  const labB = rgbToLab(hexToRgb(b));
+  return Math.hypot(labA.l - labB.l, labA.a - labB.a, labA.b - labB.b);
 }
 
-function calculateVibrance(colors: string[]): number {
-  return Math.round(
-    avg(
-      colors.map((hex) => {
-        const { r, g, b } = hexToRgb(hex);
-        const diff = Math.max(r, g, b) - Math.min(r, g, b);
-        return (diff / 255) * 100;
-      })
-    )
-  );
+function rgbToLab({ r, g, b }: { r: number; g: number; b: number }): {
+  l: number;
+  a: number;
+  b: number;
+} {
+  r /= 255;
+  g /= 255;
+  b /= 255;
+
+  r = r > 0.04045 ? Math.pow((r + 0.055) / 1.055, 2.4) : r / 12.92;
+  g = g > 0.04045 ? Math.pow((g + 0.055) / 1.055, 2.4) : g / 12.92;
+  b = b > 0.04045 ? Math.pow((b + 0.055) / 1.055, 2.4) : b / 12.92;
+
+  let x = r * 0.4124 + g * 0.3576 + b * 0.1805;
+  let y = r * 0.2126 + g * 0.7152 + b * 0.0722;
+  let z = r * 0.0193 + g * 0.1192 + b * 0.9505;
+
+  x = x > 0.008856 ? Math.pow(x, 1 / 3) : 7.787 * x + 16 / 116;
+  y = y > 0.008856 ? Math.pow(y, 1 / 3) : 7.787 * y + 16 / 116;
+  z = z > 0.008856 ? Math.pow(z, 1 / 3) : 7.787 * z + 16 / 116;
+
+  return {
+    l: 116 * y - 16,
+    a: 500 * (x - y),
+    b: 200 * (y - z),
+  };
 }
 
-function calculateBrightness(colors: string[]): number {
-  return Math.round(
-    avg(
-      colors.map((hex) => {
-        const { r, g, b } = hexToRgb(hex);
-        return (0.299 * r + 0.587 * g + 0.114 * b) / 2.55;
-      })
-    )
-  );
-}
+function calculateColorMetrics(colors: HexColor[]): {
+  vibrance: number;
+  brightness: number;
+  avgSaturation: number;
+} {
+  if (!colors.length) {
+    return { vibrance: 50, brightness: 50, avgSaturation: 50 };
+  }
 
-function calculateAverageSaturation(colors: string[]): number {
-  return Math.round(
-    avg(colors.map((hex) => hexToHsl(hex).s * 100))
-  );
+  const vibrances = colors.map((hex) => {
+    const { r, g, b } = hexToRgb(hex);
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    return ((max - min) / 255) * 100;
+  });
+
+  const brightnesses = colors.map((hex) => {
+    const { r, g, b } = hexToRgb(hex);
+    return (0.299 * r + 0.587 * g + 0.114 * b) / 2.55;
+  });
+
+  const saturations = colors.map((hex) => hexToHsl(hex).s * 100);
+
+  return {
+    vibrance: Math.round(avg(vibrances)),
+    brightness: Math.round(avg(brightnesses)),
+    avgSaturation: Math.round(avg(saturations)),
+  };
 }
 
 function detectCompositionFromName(src: string): string {
@@ -158,7 +206,11 @@ function detectCompositionFromName(src: string): string {
   if (name.includes("pet") || name.includes("dog") || name.includes("petshop"))
     return "Petshop";
 
-  if (name.includes("advog") || name.includes("jurid") || name.includes("debora"))
+  if (
+    name.includes("advog") ||
+    name.includes("jurid") ||
+    name.includes("debora")
+  )
     return "Corporativo";
 
   if (
@@ -193,13 +245,15 @@ function detectCompositionFromName(src: string): string {
   return "Genérico";
 }
 
-function detectFocus(img: HTMLImageElement): string {
-  if (img.width > img.height) return "Centro horizontal";
-  if (img.height > img.width) return "Centro vertical";
-  return "Centralizado";
+function detectFocusType(
+  img: HTMLImageElement
+): "horizontal" | "vertical" | "square" {
+  if (img.width > img.height * 1.2) return "horizontal";
+  if (img.height > img.width * 1.2) return "vertical";
+  return "square";
 }
 
-function detectStyle({
+function detectStyleV2({
   vibrance,
   brightness,
   avgSaturation,
@@ -210,57 +264,54 @@ function detectStyle({
   brightness: number;
   avgSaturation: number;
   composition: string;
-  palette: string[];
+  palette: HexColor[];
 }): string[] {
-  const styles: string[] = [];
+  const styles = new Set<string>();
 
-  const hasBlack = palette.some((p) => p.includes("000000"));
-  const hasWhite = palette.some((p) => p.includes("ffffff"));
+  const hasBlack = palette.some((p) => colorDeltaE(p, "#000000") < 20);
+  const hasWhite = palette.some((p) => colorDeltaE(p, "#ffffff") < 20);
 
-  if (vibrance >= 60 && avgSaturation >= 60) styles.push("Vibrante");
-  if (brightness >= 65 && avgSaturation <= 80) styles.push("Clean");
-  if (brightness <= 35) styles.push("Dark");
+  if (vibrance >= 60 && avgSaturation >= 60) styles.add("Vibrante");
+  if (brightness >= 65 && avgSaturation <= 80) styles.add("Clean");
+  if (brightness <= 35) styles.add("Dark");
   if (hasBlack && (hasWhite || brightness >= 55) && vibrance <= 50)
-    styles.push("Minimalista");
-  if (avgSaturation <= 40 && brightness >= 55) styles.push("Pastel");
+    styles.add("Minimalista");
+  if (avgSaturation <= 40 && brightness >= 55) styles.add("Pastel");
 
   if (composition === "Petshop" && vibrance >= 55 && brightness >= 55)
-    styles.push("Vibrante");
-
+    styles.add("Vibrante");
   if (composition === "Corporativo" && hasBlack) {
-    styles.push("Dark");
-    styles.push("Minimalista");
+    styles.add("Dark");
+    styles.add("Minimalista");
   }
+  if (composition === "Farmacêutico" && brightness >= 60) styles.add("Clean");
 
-  if (composition === "Farmacêutico" && brightness >= 60)
-    styles.push("Clean");
-
-  return styles.length ? Array.from(new Set(styles)) : ["Neutro"];
+  return styles.size ? Array.from(styles) : ["Neutro"];
 }
 
-function generateTags({
+function generateTagsV2({
   palette,
   style,
   composition,
   brightness,
   vibrance,
 }: {
-  palette: string[];
+  palette: HexColor[];
   style: string[];
   composition: string;
   brightness: number;
   vibrance: number;
 }): string[] {
-  const tags: string[] = [];
+  const tags = new Set<string>();
 
-  style.forEach((s) => tags.push(s.toUpperCase()));
-  tags.push(composition.toUpperCase());
-  tags.push(`COR DOMINANTE: ${palette[0].toUpperCase()}`);
+  style.forEach((s) => tags.add(s.toUpperCase()));
+  tags.add(composition.toUpperCase());
+  if (palette[0]) tags.add(`COR DOMINANTE: ${palette[0].toUpperCase()}`);
 
-  if (brightness >= 65 && vibrance <= 40) tags.push("SUAVE");
-  if (brightness <= 40 && vibrance >= 50) tags.push("DRAMÁTICO");
+  if (brightness >= 65 && vibrance <= 40) tags.add("SUAVE");
+  if (brightness <= 40 && vibrance >= 50) tags.add("DRAMÁTICO");
 
-  return tags;
+  return Array.from(tags);
 }
 
 function avg(arr: number[]): number {
@@ -268,10 +319,12 @@ function avg(arr: number[]): number {
 }
 
 function rgbToHex(r: number, g: number, b: number): string {
-  return `#${[r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
+  return `#${[r, g, b]
+    .map((v) => Math.min(255, Math.max(0, v)).toString(16).padStart(2, "0"))
+    .join("")}`;
 }
 
-function hexToRgb(hex: string) {
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
   const n = parseInt(hex.slice(1), 16);
   return {
     r: (n >> 16) & 255,
@@ -280,7 +333,7 @@ function hexToRgb(hex: string) {
   };
 }
 
-function hexToHsl(hex: string) {
+function hexToHsl(hex: string): { h: number; s: number; l: number } {
   const { r, g, b } = hexToRgb(hex);
   const rn = r / 255;
   const gn = g / 255;
