@@ -4,6 +4,7 @@ import { motion, useInView } from "motion/react";
 import { LazyVideo } from "./LazyVideo";
 import Image from "next/image";
 import { useRef, useMemo } from "react";
+import { ImageAnalysis } from "@/lib/imageAnalysis";
 
 export function ProjectCard({
   project,
@@ -14,7 +15,7 @@ export function ProjectCard({
   isLoading,
 }: {
   project: Project;
-  analysis: any;
+  analysis: ImageAnalysis;
   direction: "x" | "y";
   reduced: boolean | null;
   assetBase: string;
@@ -68,7 +69,7 @@ export function ProjectCard({
             fill
             className="object-cover"
             placeholder="blur"
-            blurDataURL="/assets/blur.png"
+            blurDataURL="/assets/images/blur.png"
             sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 400px"
           />
         )}
