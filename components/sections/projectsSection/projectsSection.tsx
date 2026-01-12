@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -104,7 +105,7 @@ export function ProjectsSection({ creator, projects }: ProjectsSectionProps) {
               className="h-14 w-14 rounded-full object-cover border border-white/20 shadow-xl"
               sizes="56px"
               placeholder="blur"
-              blurDataURL="/assets/blur.png"
+              blurDataURL="/assets/images/blur.png"
               priority
             />
           </motion.div>
@@ -185,7 +186,7 @@ export function ProjectsSection({ creator, projects }: ProjectsSectionProps) {
               fill
               className="object-contain"
               placeholder="blur"
-              blurDataURL="/assets/blur.png"
+              blurDataURL="/assets/images/blur.png"
               sizes="(max-width: 768px) 90vw, 400px"
             />
           </motion.figure>
