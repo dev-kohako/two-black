@@ -2,134 +2,148 @@
 
 export function createImageWorker() {
   const workerCode = `
-    self.onmessage = async (event) => {
-      const { id, src } = event.data;
+    function rgbToHex(r, g, b) {
+      return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    }
 
-      try {
-        const blob = await fetch(src).then(r => {
-          if (!r.ok) throw new Error("Falha ao carregar imagem: " + src);
-          return r.blob();
+    function getBrightness(r, g, b) {
+      return 0.299 * r + 0.587 * g + 0.114 * b;
+    }
+
+    function analyzeImageData(data, width, height, filename) {
+      const SAMPLE_STEP = 5;    
+      const MIN_ALPHA = 40;          
+      const BUCKET_SIZE = 6;        
+
+      let rSum = 0, gSum = 0, bSum = 0, count = 0;
+      const buckets = new Map();
+
+      for (let y = 0; y < height; y += SAMPLE_STEP) {
+        for (let x = 0; x < width; x += SAMPLE_STEP) {
+          const i = (y * width + x) * 4;
+          const r = data[i], g = data[i+1], b = data[i+2], a = data[i+3];
+
+          if (a < MIN_ALPHA) continue;
+
+          count++;
+          rSum += r;
+          gSum += g;
+          bSum += b;
+
+          const key = ((r >> 2) << 12) | ((g >> 2) << 6) | (b >> 2);
+          buckets.set(key, (buckets.get(key) || 0) + 1);
+        }
+      }
+
+      if (count === 0) {
+        return {
+          palette: ["#888888"],
+          primary: "#888888",
+          secondary: "#666666",
+          brightness: 50,
+          isDark: true,
+          style: ["Unknown", "Low contrast"],
+          composition: "Genérico",
+          tags: ["UNKNOWN"]
+        };
+      }
+
+      const palette = [...buckets.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8)
+        .map(([key]) => {
+          const r = (key >> 12) << 2;
+          const g = ((key >> 6) & 63) << 2;
+          const b = (key & 63) << 2;
+          return rgbToHex(r, g, b);
         });
 
-        const bitmap = await createImageBitmap(blob);
+      const avgBrightness = getBrightness(rSum / count, gSum / count, bSum / count);
+      const isDark = avgBrightness < 85;
 
-        const analysis = analyzeBitmap(bitmap);
+      const style = [];
+      if (isDark) style.push("Dark");
+      if (avgBrightness > 170) style.push("Bright");
+      if (palette.length <= 3) style.push("Minimalista");
+      else if (palette.length >= 6) style.push("Colorido");
+      style.push(isDark ? "Elegante" : "Moderno");
 
-        self.postMessage({ id, result: analysis, success: true });
+      const name = (filename || "").toLowerCase().split(/[/_.-]/);
+      let composition = "Genérico";
+      
+      if (name.some(t => /pet|dog|cat|animal/.test(t))) composition = "Petshop";
+      else if (name.some(t => /adv|advogado|jur|law|escritorio/.test(t))) composition = "Corporativo";
+      else if (name.some(t => /fit|gym|academia|muscle|train/.test(t))) composition = "Fitness";
+      else if (name.some(t => /food|comida|burger|pizza|cafe/.test(t))) composition = "Alimentação";
+      else if (name.some(t => /beauty|salao|maqui|hair|nail/.test(t))) composition = "Beleza";
 
-      } catch (error) {
+      return {
+        palette,
+        primary: palette[0] || "#888888",
+        secondary: palette[1] || palette[0] || "#666666",
+        brightness: Math.round(avgBrightness),
+        isDark,
+        style,
+        composition,
+        focus: "Centralizado",
+        tags: [...new Set([
+          isDark ? "DARK" : "LIGHT",
+          composition.toUpperCase(),
+          ...style.map(s => s.toUpperCase())
+        ])]
+      };
+    }
+
+    self.onmessage = async function(e) {
+      const { id, src } = e.data;
+      if (!id || !src) return;
+
+      try {
+        const response = await fetch(src, { 
+          cache: "force-cache", 
+          mode: "cors" 
+        });
+
+        if (!response.ok) {
+          throw new Error(\`HTTP \${response.status}\`);
+        }
+
+        const blob = await response.blob();
+        const bitmap = await createImageBitmap(blob, {
+          resizeQuality: "high",
+          premultiplyAlpha: "premultiply"
+        });
+
+        const TARGET_SIZE = 96;
+        const canvas = new OffscreenCanvas(TARGET_SIZE, TARGET_SIZE);
+        const ctx = canvas.getContext("2d", { alpha: true, willReadFrequently: true });
+
+        ctx.drawImage(bitmap, 0, 0, TARGET_SIZE, TARGET_SIZE);
+        const imageData = ctx.getImageData(0, 0, TARGET_SIZE, TARGET_SIZE);
+
+        const result = analyzeImageData(
+          imageData.data,
+          TARGET_SIZE,
+          TARGET_SIZE,
+          src.split("/").pop() || ""
+        );
+
+        self.postMessage({ id, result, success: true });
+
+        bitmap.close();
+      } catch (err) {
         self.postMessage({
           id,
-          error: error?.message ?? "Erro desconhecido no worker",
-          success: false
+          success: false,
+          error: err.message || "Erro desconhecido na análise"
         });
       }
     };
 
-    function analyzeBitmap(bitmap) {
-      const { palette, brightness, vibrance } = extractPaletteAndMetrics(bitmap);
-
-      const primary = palette[0] ?? "#999999";
-      const secondary = palette[1] ?? primary;
-
-      return {
-        palette,
-        primary,
-        secondary,
-        vibrance,
-        brightness,
-        style: ["Auto"],
-        composition: "Genérico",
-        focus: bitmap.width >= bitmap.height ? "Centro horizontal" : "Centro vertical",
-        tags: []
-      };
-    }
-
-    function extractPaletteAndMetrics(bitmap) {
-      const size = 96;
-      const scale = Math.min(size / bitmap.width, size / bitmap.height, 1);
-      const w = Math.max(1, Math.round(bitmap.width * scale));
-      const h = Math.max(1, Math.round(bitmap.height * scale));
-
-      const canvas = new OffscreenCanvas(w, h);
-      const ctx = canvas.getContext("2d");
-
-      ctx.drawImage(bitmap, 0, 0, w, h);
-
-      const { data } = ctx.getImageData(0, 0, w, h);
-
-      const buckets = {};
-      let brightnessSum = 0;
-      let vibranceSum = 0;
-      const totalPixels = data.length / 4;
-
-      for (let i = 0; i < data.length; i += 8) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-
-        const key = (r >> 5) + "," + (g >> 5) + "," + (b >> 5);
-        buckets[key] = (buckets[key] || 0) + 1;
-
-        const max = Math.max(r, g, b);
-        const min = Math.min(r, g, b);
-
-        brightnessSum += (0.299 * r + 0.587 * g + 0.114 * b);
-        vibranceSum += (max - min);
-      }
-
-      const sorted = Object.entries(buckets)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 18);
-
-      const colors = sorted.map(([key]) => {
-        const [br, bg, bb] = key.split(",").map(Number);
-        return rgbToHex(br * 32 + 16, bg * 32 + 16, bb * 32 + 16);
-      });
-
-      const palette = uniqueColors(colors).slice(0, 6);
-
-      const avgBrightness = Math.round((brightnessSum / totalPixels) / 2.55);
-      const avgVibrance = Math.round((vibranceSum / totalPixels) / 2.55);
-
-      return {
-        palette,
-        brightness: avgBrightness,
-        vibrance: avgVibrance,
-      };
-    }
-
-    function rgbToHex(r, g, b) {
-      return "#" + [r, g, b]
-        .map(v => v.toString(16).padStart(2, "0"))
-        .join("");
-    }
-
-    function uniqueColors(colors) {
-      const result = [];
-      for (const c of colors) {
-        if (!result.some(rc => colorDistance(rc, c) < 14)) {
-          result.push(c);
-        }
-      }
-      return result;
-    }
-
-    function colorDistance(a, b) {
-      const ar = parseInt(a.slice(1, 3), 16);
-      const ag = parseInt(a.slice(3, 5), 16);
-      const ab = parseInt(a.slice(5, 7), 16);
-
-      const br = parseInt(b.slice(1, 3), 16);
-      const bg = parseInt(b.slice(3, 5), 16);
-      const bb = parseInt(b.slice(5, 7), 16);
-
-      return Math.hypot(ar - br, ag - bg, ab - bb);
-    }
+    self.postMessage({ type: "ready" });
   `;
 
   const blob = new Blob([workerCode], { type: "application/javascript" });
-  const workerUrl = URL.createObjectURL(blob);
-
-  return new Worker(workerUrl);
+  const worker = new Worker(URL.createObjectURL(blob));
+  return worker;
 }
